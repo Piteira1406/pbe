@@ -1,0 +1,91 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+db.sqlite3
+db.sqlite3-journal
+
+# Django media/uploads
+media/
+staticfiles/
+
+# Local settings
+*.local
+*.env
+.env.*
+config/settings/local.py
+
+# Coverage reports
+htmlcov/
+.coverage
+.tox/
+.nox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Pytest
+.pytest_cache/
+
+# Test/migrations
+*.mo
+*.pot
+*.swp
+*/migrations/__pycache__/
+*/migrations/*.py[cod]
+*/migrations/*.py~
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Node/npm (caso venhas a usar npm para frontend)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Compiled binary
+*.so
+*.dll
+*.dylib
+
+# System files
+Thumbs.db
+ehthumbs.db
+
+# Oscar
+static_cdn/
+public/
+
+# Media and static collected
+/media/
+static_root/
+static/
+
+# Editor backups
+*~
+*.bak
