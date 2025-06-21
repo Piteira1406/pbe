@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 urlpatterns = [
@@ -9,5 +9,4 @@ urlpatterns = [
     path('produtos/', views.ProductListCreateAPIView.as_view(), name='product-list'),
     path('produtos/<int:pk>/', views.ProductDetailAPIView.as_view(), name='product-detail'),
     path('categorias/', views.CategoryListAPIView.as_view(), name='category-list'),
-    path('orders/', views.checkout_view, name='checkout'),
 ]
