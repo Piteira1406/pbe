@@ -1,0 +1,10 @@
+django
+django-oscar
+django-oscar-api
+sorl-thumbnail
+django-treebeard
+django-haystack
+django-tables2
+Pillow
+djangorestframework
+djangorestframework-simplejwt

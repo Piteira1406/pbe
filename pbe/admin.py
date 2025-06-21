@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ( ClienteProfile, SupplierProfile, ProductCategory, Product, Order, OrderItem )
+from ..marketplace.models import ( ClienteProfile, SupplierProfile, ProductCategory, Product, Order, OrderItem )
 
 #-------------------------
 # Cliente
