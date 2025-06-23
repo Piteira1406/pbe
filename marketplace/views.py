@@ -47,18 +47,25 @@ def register_fornecedor(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
+    print("⚡ Login view ativada")  
     username = request.data.get('username')
     password = request.data.get('password')
+
     user = authenticate(request, username=username, password=password)
 
     if user is not None:
         tokens = get_tokens_for_user(user)
         return Response({
-            'user': UserSerializer(user).data,
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email
+            },
             'tokens': tokens
-        })
-    else:
-        return Response({'error': 'Credenciais inválidas'}, status=status.HTTP_401_UNAUTHORIZED)
+        }, status=status.HTTP_200_OK)
+
+    return Response({'error': 'Credenciais inválidas'}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 # GET /api/profile/
 @api_view(['GET'])
