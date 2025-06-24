@@ -11,16 +11,12 @@ from django.db.models import Sum, Count
 from decimal import Decimal
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-<<<<<<< HEAD
 from .models import User, ClienteProfile, SupplierProfile, Product, ProductCategory, Order, OrderItem
 from .serializers import OrderSerializer
 from django.db import transaction
-=======
 from .models import ClienteProfile, SupplierProfile, OrderItem, Product, Order
 from .serializers import ClienteProfileSerializer, SupplierProfileSerializer, UserSerializer, OrderItemSerializer, OrderSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
->>>>>>> fd64de39a45b660f6fd4e1edfc5d145518eed74d
-
 from .models import (
     Product, ProductCategory,
     ClienteProfile, SupplierProfile
@@ -102,11 +98,11 @@ def login_view(request):
     user = authenticate(request, username=username, password=password)
 
     if user is not None:
-<<<<<<< HEAD
+
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
-=======
+
         tokens = get_tokens_for_user(user)
         return Response({
             'user': {
@@ -119,17 +115,14 @@ def login_view(request):
 
     return Response({'error': 'Credenciais inválidas'}, status=status.HTTP_401_UNAUTHORIZED)
 
->>>>>>> fd64de39a45b660f6fd4e1edfc5d145518eed74d
 
-        return Response({
-            "user": UserSerializer(user).data,
-            "tokens": {
-                "access": access_token,
-                "refresh": refresh_token
-            }
-        }, status=status.HTTP_200_OK)
-    else:
-        raise AuthenticationFailed("Credenciais inválidas.")
+    return Response({
+        "user": UserSerializer(user).data,
+        "tokens": {
+            "access": access_token,
+            "refresh": refresh_token
+        }
+    }, status=status.HTTP_200_OK)
 
 # ----------------------------
 # PERFIL DE UTILIZADOR AUTENTICADO
@@ -150,7 +143,6 @@ def profile_view(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-<<<<<<< HEAD
 # ----------------------------
 # PRODUCT DETAIL VIEW
 # ----------------------------
@@ -239,7 +231,6 @@ def checkout_view(request):
 
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-=======
 # GET /api/encomendas/fornecedor/
 # Esta view retorna as encomendas feitas a um fornecedor específico.
 @api_view(['GET'])
@@ -368,7 +359,3 @@ def criar_encomenda(request):
         )
 
     return Response({'success': 'Encomenda criada com sucesso.', 'order_id': order.id}, status=201)
-
-
-
->>>>>>> fd64de39a45b660f6fd4e1edfc5d145518eed74d
