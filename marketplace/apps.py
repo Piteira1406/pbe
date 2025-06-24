@@ -1,6 +1,11 @@
 from django.apps import AppConfig
+from oscar.apps.dashboard.catalogue.apps import CatalogueDashboardConfig
+from oscar.apps.dashboard.orders.apps import OrdersDashboardConfig
 
+class MarketplaceDashboardCatalogueConfig(CatalogueDashboardConfig):
+    name = 'marketplace.dashboard.catalogue'
+    label = 'marketplace_dashboard_catalogue'
 
-class MarketplaceConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'marketplace'
+class MarketplaceDashboardOrdersConfig(OrdersDashboardConfig):
+    name = 'marketplace.dashboard.orders'
+    label = 'marketplace_dashboard_orders'
