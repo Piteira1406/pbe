@@ -10,7 +10,7 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from .models import ClienteProfile, SupplierProfile, OrderItem, Product, Order
-from .serializers import ClienteProfileSerializer, SupplierProfileSerializer, UserSerializer, OrderItemSerializer, OrderSerializer
+from .serializers import ClienteProfileSerializer, SupplierProfileSerializer, UserSerializer, AdministradorProfileSerializer, OrderItemSerializer, OrderSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
 # Função auxiliar para gerar token JWT
@@ -44,6 +44,24 @@ def register_fornecedor(request):
     user = User.objects.create_user(username=data['username'], email=data['email'], password=data['password'])
     SupplierProfile.objects.create(email=user, phone=data['phone'], supplier_name=data['supplier_name'])
     return Response({'success': 'Fornecedor registado com sucesso'}, status=status.HTTP_201_CREATED)
+
+# POST /api/register/admin/
+@api_view(['POST'])
+@permission_classes([AllowAny])  # Podes mudar para IsAdminUser em produção
+def register_admin(request):
+    data = request.data
+    if User.objects.filter(username=data['username']).exists():
+        return Response({'error': 'Utilizador já existe'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user = User.objects.create_user(
+        username=data['username'],
+        email=data['email'],
+        password=data['password'],
+        is_staff=True,     # Ativa acesso ao admin Django
+        is_superuser=True  # Marca como administrador global
+    )
+    AdministradorProfile.objects.create(email=user, telefone=data['telefone'])
+    return Response({'success': 'Administrador registado com sucesso'}, status=status.HTTP_201_CREATED)
 
 # POST /api/login/
 @api_view(['POST'])
@@ -79,12 +97,15 @@ def profile_view(request):
             profile = ClienteProfileSerializer(user.clienteprofile).data
         elif hasattr(user, 'supplierprofile'):
             profile = SupplierProfileSerializer(user.supplierprofile).data
+        elif hasattr(user, 'administradorprofile'):
+            profile = AdministradorProfileSerializer(user.administradorprofile).data
         else:
             profile = UserSerializer(user).data
 
         return Response({'user': profile})
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 # GET /api/encomendas/fornecedor/
 # Esta view retorna as encomendas feitas a um fornecedor específico.

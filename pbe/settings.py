@@ -63,6 +63,8 @@ INSTALLED_APPS = [
     'oscar.apps.dashboard.apps.DashboardConfig',
     'oscar.apps.dashboard.reports.apps.ReportsDashboardConfig',
     'oscar.apps.dashboard.users.apps.UsersDashboardConfig',
+    'oscar.apps.dashboard.orders.apps.OrdersDashboardConfig',
+    'oscar.apps.dashboard.catalogue.apps.CatalogueDashboardConfig',
     'oscar.apps.dashboard.offers.apps.OffersDashboardConfig',
     'oscar.apps.dashboard.partners.apps.PartnersDashboardConfig',
     'oscar.apps.dashboard.pages.apps.PagesDashboardConfig',
@@ -71,8 +73,7 @@ INSTALLED_APPS = [
     'oscar.apps.dashboard.vouchers.apps.VouchersDashboardConfig',
     'oscar.apps.dashboard.communications.apps.CommunicationsDashboardConfig',
     'oscar.apps.dashboard.shipping.apps.ShippingDashboardConfig',
-    'marketplace.dashboard.catalogue',
-    'marketplace.dashboard.orders',
+    
 
     # 3rd-party apps that oscar depends on
     'widget_tweaks',

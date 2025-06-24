@@ -23,6 +23,14 @@ class SupplierProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = SupplierProfile
         fields = ['id', 'user', 'phone', 'supplier_name']
+        
+# Administrador
+class AdministradorProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer(source='email', read_only=True)
+
+    class Meta:
+        model = AdministradorProfile
+        fields = ['id', 'user', 'telefone']
 
 # Categoria
 class ProductCategorySerializer(serializers.ModelSerializer):

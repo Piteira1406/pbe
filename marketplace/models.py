@@ -25,6 +25,15 @@ class SupplierProfile(models.Model):
     def __str__(self):
         return f"{self.supplier_name}'s Profile"
     
+#--------------------------------
+# ADMINISTRADOR PROFILE.
+#--------------------------------
+class AdministradorProfile(models.Model):
+    email = models.OneToOneField(User, on_delete=models.CASCADE)
+    telefone = models.CharField(max_length=15, blank=False, null=False)
+
+    def __str__(self):
+        return f"Admin {self.email.username}"
 
 #--------------------------------
 # PRODUCT CATEGORIES
