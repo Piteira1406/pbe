@@ -14,5 +14,5 @@ urlpatterns = [
 
     path("api/oscar/", include("oscarapi.urls")),
     
-    path("api/", include("marketplace.urls"))  # A tua API
+    path('', include("marketplace.urls"))  # A tua API
 ]

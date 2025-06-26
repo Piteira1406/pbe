@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ClienteProfile, SupplierProfile, ProductCategory, Product, Order, OrderItem
+from .models import ClienteProfile, SupplierProfile, ProductCategory, Product, Order, OrderItem, AdministradorProfile
 from django.contrib.auth.models import User
 
 # User básico (para exibir info limitada)
@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 # Cliente
 class ClienteProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(source='email', read_only=True)
+    user = UserSerializer(source='user', read_only=True)
 
     class Meta:
         model = ClienteProfile
@@ -18,11 +18,20 @@ class ClienteProfileSerializer(serializers.ModelSerializer):
 
 # Fornecedor
 class SupplierProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(source='email', read_only=True)
+    user = UserSerializer(source='user', read_only=True)
 
     class Meta:
         model = SupplierProfile
         fields = ['id', 'user', 'phone', 'supplier_name']
+
+# Administrador
+class AdministradorProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer(source='user', read_only=True)
+
+    class Meta:
+        model = AdministradorProfile
+        fields = ['id', 'user', 'telefone']
+
 
 # Categoria
 class ProductCategorySerializer(serializers.ModelSerializer):
@@ -32,14 +41,15 @@ class ProductCategorySerializer(serializers.ModelSerializer):
 
 # Produto
 class ProductSerializer(serializers.ModelSerializer):
-    category = ProductCategorySerializer(read_only=True)
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=ProductCategory.objects.all()
+    )
     supplier = SupplierProfileSerializer(read_only=True)
 
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'description', 'image', 'price',
-            'sell_unity', 'stock_quantity', 'category', 'supplier'
+            'id', 'name', 'description', 'price', 'stock_quantity', 'category', 'supplier'
         ]
 
 # Item de Encomenda
