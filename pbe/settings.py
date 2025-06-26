@@ -12,7 +12,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from oscar.defaults import *
+import os
+import logging
 
+
+logging.basicConfig(level=logging.DEBUG)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,6 +34,8 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+
+# Custom user model
 # Application definition
 
 INSTALLED_APPS = [
@@ -89,6 +95,9 @@ INSTALLED_APPS = [
 ]
 
 SITE_ID = 1
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # Use console backend for development/ e para remover emails
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

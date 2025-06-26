@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 
 #--------------------------------
 # CLIENTE PROFILE.
@@ -20,8 +22,8 @@ class ClienteProfile(models.Model):
 class SupplierProfile(models.Model):
     email = models.OneToOneField(User, on_delete=models.CASCADE)
     phone = models.CharField(max_length=15, blank=False, null=False)
-    supplier_name = models.CharField(max_length=255, blank=False, null=False)
-
+    supplier_name = models.CharField(max_length=255, blank=False, null=False, unique=True)
+    
     def __str__(self):
         return f"{self.supplier_name}'s Profile"
     
@@ -88,3 +90,5 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name} in Order {self.order.id}"
+    
+#--------------------------------

@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Product, Order, OrderItem, SupplierProfile
+from .models import Product, Order, OrderItem, SupplierProfile, User
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 
 #ProductAdmin
@@ -47,3 +48,23 @@ class OrderAdmin(admin.ModelAdmin):
             return qs.none()
 
 admin.site.register(Order, OrderAdmin)
+
+# ✅ Função segura para mostrar is_supplier
+def get_is_supplier(obj):
+    return getattr(obj, 'is_supplier', False)
+
+get_is_supplier.boolean = True
+get_is_supplier.short_description = 'Supplier'
+
+# ✅ Nova classe de admin
+class CustomUserAdmin(BaseUserAdmin):
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', get_is_supplier)
+
+# ✅ Tenta desregistar sem crashar
+try:
+    admin.site.unregister(User)
+except admin.sites.NotRegistered:
+    pass
+
+# ✅ Regista o novo UserAdmin
+admin.site.register(User, CustomUserAdmin)

@@ -12,6 +12,8 @@ urlpatterns = [
     path('encomendas/', views.encomendas_cliente, name='encomendas_cliente'),
     path('encomendas/<int:id>/', views.detalhe_encomenda_cliente, name='detalhe_encomenda_cliente'),
     path('encomendas/criar/', views.criar_encomenda, name='criar_encomenda'),
+    
+    
    
 
 
