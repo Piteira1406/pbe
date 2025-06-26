@@ -1,22 +1,23 @@
 from django.shortcuts import render, redirect
+from django.core.exceptions import PermissionDenied
 
-# Create your views here.
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework import status
-from django.db.models import Sum, Count
+from rest_framework import status, generics, permissions
+from django.db.models import Sum
 from decimal import Decimal
-from django.contrib.auth.models import User
 from django.urls import reverse
-from django.contrib.auth import authenticate,login
-from .models import ClienteProfile, SupplierProfile, OrderItem, Product, Order
-from .serializers import ClienteProfileSerializer, SupplierProfileSerializer, UserSerializer, AdministradorProfileSerializer, OrderItemSerializer, OrderSerializer
-from .forms import FornecedorRegisterForm, ClienteRegisterForm
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login
+from .models import ClienteProfile, SupplierProfile, OrderItem, Product, ProductCategory, Order
+from .serializers import ClienteProfileSerializer, SupplierProfileSerializer, UserSerializer, OrderItemSerializer, OrderSerializer, ProductSerializer, ProductCategorySerializer, AdministradorProfileSerializer
+from .forms import ClienteRegisterForm, FornecedorRegisterForm
 from rest_framework_simplejwt.tokens import RefreshToken
+from django_filters.rest_framework import DjangoFilterBackend
 from django.views import View
 
-# Função auxiliar para gerar token JWT
+# JWT helper
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     return {
@@ -154,133 +155,105 @@ def profile_view(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def encomendas_fornecedor(request):
-    user = request.user
-
-    if not hasattr(user, 'supplierprofile'):
+    if not hasattr(request.user, 'supplierprofile'):
         return Response({'error': 'Apenas fornecedores podem ver estas encomendas.'}, status=403)
-
-    fornecedor = user.supplierprofile
-
-    # Filtrar OrderItems cujos produtos pertencem ao fornecedor
-    items = OrderItem.objects.filter(product__supplier=fornecedor).select_related('order', 'product')
-
-    serializer = OrderItemSerializer(items, many=True)
-    return Response(serializer.data)
-
-#Get /api/estatisticas/fornecedor/
+    items = OrderItem.objects.filter(product__supplier=request.user.supplierprofile)
+    return Response(OrderItemSerializer(items, many=True).data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def estatisticas_fornecedor(request):
-    user = request.user
-
-    if not hasattr(user, 'supplierprofile'):
+    if not hasattr(request.user, 'supplierprofile'):
         return Response({'error': 'Apenas fornecedores têm acesso às estatísticas.'}, status=403)
-
-    fornecedor = user.supplierprofile
-
-    produtos = Product.objects.filter(supplier=fornecedor)
+    produtos = Product.objects.filter(supplier=request.user.supplierprofile)
     items = OrderItem.objects.filter(product__in=produtos)
-
-    total_faturado = items.aggregate(total=Sum('total_item'))['total'] or 0
-    total_produtos_vendidos = items.aggregate(qtd=Sum('quantity'))['qtd'] or 0
-    total_encomendas = items.values('order').distinct().count()
     return Response({
-        'total_faturado': total_faturado,
-        'total_produtos_vendidos': total_produtos_vendidos,
-        'total_encomendas': total_encomendas,
+        'total_faturado': items.aggregate(Sum('price_per_unit'))['price_per_unit__sum'] or 0,
+        'total_produtos_vendidos': items.aggregate(Sum('quantity'))['quantity__sum'] or 0,
+        'total_encomendas': items.values('order').distinct().count()
     })
-  
- # GET /api/encomendas/cliente/   
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def encomendas_cliente(request):
-    user = request.user
+    if not hasattr(request.user, 'clienteprofile'):
+        return Response({'error': 'Apenas clientes podem ver encomendas.'}, status=403)
+    encomendas = Order.objects.filter(customer=request.user.clienteprofile)
+    return Response(OrderSerializer(encomendas, many=True).data)
 
-    if not hasattr(user, 'clienteprofile'):
-        return Response({'error': 'Apenas clientes podem ver as suas encomendas.'}, status=403)
-
-    cliente = user.clienteprofile
-    encomendas = Order.objects.filter(customer=cliente).prefetch_related('items__product')
-    serializer = OrderSerializer(encomendas, many=True)
-
-    return Response(serializer.data)
-
-# GET /api/encomendas/cliente/<id>/
-# Esta view retorna os detalhes de uma encomenda específica de um cliente.
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def detalhe_encomenda_cliente(request, id):
-    user = request.user
-
-    if not hasattr(user, 'clienteprofile'):
+    if not hasattr(request.user, 'clienteprofile'):
         return Response({'error': 'Apenas clientes podem ver encomendas.'}, status=403)
-
     try:
-        encomenda = Order.objects.get(id=id, customer=user.clienteprofile)
+        encomenda = Order.objects.get(id=id, customer=request.user.clienteprofile)
+        return Response(OrderSerializer(encomenda).data)
     except Order.DoesNotExist:
-        return Response({'error': 'Encomenda não encontrada ou não pertence a este utilizador.'}, status=404)
+        return Response({'error': 'Encomenda não encontrada.'}, status=404)
 
-    serializer = OrderSerializer(encomenda)
-    return Response(serializer.data)
-
-# POST /api/encomendas/
-# Esta view permite que um cliente crie uma nova encomenda com base nos itens do carrinho
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def criar_encomenda(request):
-    user = request.user
-
-    if not hasattr(user, 'clienteprofile'):
+    if not hasattr(request.user, 'clienteprofile'):
         return Response({'error': 'Apenas clientes podem criar encomendas.'}, status=403)
-
-    data = request.data
-    items_data = data.get('items', [])
-
-    if not items_data:
+    data = request.data.get('items', [])
+    if not data:
         return Response({'error': 'Carrinho vazio.'}, status=400)
 
-    total = Decimal('0.00')
-    order_items = []
-
-    for item in items_data:
+    total, order_items = Decimal('0.00'), []
+    for item in data:
         try:
-            product = Product.objects.get(id=item['product_id'])
-            quantity = int(item['quantity'])
-
-            if quantity <= 0:
-                return Response({'error': f'Quantidade inválida para o produto ID {item["product_id"]}.'}, status=400)
-
-            price_unit = product.price
-            total += price_unit * quantity
-
-            order_items.append({
-                'product': product,
-                'quantity': quantity,
-                'price_per_unit': price_unit
-            })
-
+            produto = Product.objects.get(id=item['product_id'])
+            quantidade = int(item['quantity'])
+            if quantidade <= 0:
+                return Response({'error': 'Quantidade inválida.'}, status=400)
+            total += produto.price * quantidade
+            order_items.append({'product': produto, 'quantity': quantidade, 'price_per_unit': produto.price})
         except Product.DoesNotExist:
             return Response({'error': f'Produto ID {item["product_id"]} não encontrado.'}, status=404)
 
-    # Criar encomenda
-    order = Order.objects.create(customer=user.clienteprofile, total_amount=total)
+    encomenda = Order.objects.create(customer=request.user.clienteprofile, total_amount=total)
+    for i in order_items:
+        OrderItem.objects.create(order=encomenda, **i)
 
-    # Criar os OrderItem associados
-    for item in order_items:
-        OrderItem.objects.create(
-            order=order,
-            product=item['product'],
-            quantity=item['quantity'],
-            price_per_unit=item['price_per_unit']
-        )
+    return Response({'success': 'Encomenda criada.', 'order_id': encomenda.id}, status=201)
 
-    return Response({'success': 'Encomenda criada com sucesso.', 'order_id': order.id}, status=201)
+# PRODUCT VIEWS
+class ProductListCreateAPIView(generics.ListCreateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['category', 'supplier', 'stock_quantity']
 
+    def get_permissions(self):
+        return [permissions.IsAuthenticated()] if self.request.method == 'POST' else [permissions.AllowAny()]
 
+    def perform_create(self, serializer):
+        user = self.request.user
+        if not hasattr(user, 'supplierprofile'):
+            raise PermissionDenied("Apenas fornecedores podem criar produtos.")
+        serializer.save(supplier=user.supplierprofile)
 
 class SupplierDashboardView(View):
     def get(self, request):
         if not hasattr(request.user, 'supplierprofile'):
             return redirect('/dashboard')  # ou mostrar erro
         return render(request, 'dashboard/fornecedor.html')
+class ProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+    def get_permissions(self):
+        return [permissions.IsAuthenticated()] if self.request.method in ['PUT', 'PATCH', 'DELETE'] else [permissions.AllowAny()]
+
+# CATEGORY VIEWS
+class CategoryListCreateAPIView(generics.ListCreateAPIView):
+    queryset = ProductCategory.objects.all()
+    serializer_class = ProductCategorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class CategoryDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ProductCategory.objects.all()
+    serializer_class = ProductCategorySerializer
+    permission_classes = [permissions.IsAuthenticated]

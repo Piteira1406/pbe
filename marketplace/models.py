@@ -58,7 +58,7 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2, blank=False, null=False)
     sell_unity = models.CharField(max_length=50, choices=[('kg', 'Kilogram'),('g', 'Gram'),('l', 'Liter'),('ml', 'Milliliter'),('pcs', 'Pieces')], default='pcs')
     stock_quantity = models.PositiveIntegerField(default=0)
-    category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE)
+    category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, null=False, blank=False)
     supplier = models.ForeignKey(SupplierProfile, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -91,4 +91,13 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.quantity} x {self.product.name} in Order {self.order.id}"
     
+
 #--------------------------------
+# ADMINISTRADOR PROFILE.
+#--------------------------------
+class AdministradorProfile(models.Model):
+    email = models.OneToOneField(User, on_delete=models.CASCADE)
+    telefone = models.CharField(max_length=15, blank=False, null=False)
+
+    def __str__(self):
+        return f"Admin {self.email.username}"

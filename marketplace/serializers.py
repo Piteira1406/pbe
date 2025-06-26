@@ -27,7 +27,6 @@ class SupplierProfileSerializer(serializers.ModelSerializer):
         model = SupplierProfile
         fields = ['id', 'user', 'phone', 'supplier_name']
 
-
 # Administrador
 class AdministradorProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(source='user', read_only=True)
@@ -46,14 +45,15 @@ class ProductCategorySerializer(serializers.ModelSerializer):
 
 # Produto
 class ProductSerializer(serializers.ModelSerializer):
-    category = ProductCategorySerializer(read_only=True)
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=ProductCategory.objects.all()
+    )
     supplier = SupplierProfileSerializer(read_only=True)
 
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'description', 'image', 'price',
-            'sell_unity', 'stock_quantity', 'category', 'supplier'
+            'id', 'name', 'description', 'price', 'stock_quantity', 'category', 'supplier'
         ]
 
 
