@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
 from django.db.models import Sum
+from django.contrib.auth.models import Group
 from decimal import Decimal
 from django.urls import reverse
 from django.contrib.auth.models import User
@@ -257,3 +258,11 @@ class CategoryDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ProductCategory.objects.all()
     serializer_class = ProductCategorySerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+
+
+def atribuir_a_fornecedores(user):
+    grupo, criado = Group.objects.get_or_create(name='Fornecedores')
+    user.groups.add(grupo)
+    user.save()
