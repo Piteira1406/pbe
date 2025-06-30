@@ -55,7 +55,7 @@ def register_cliente(request):
 
     return render(request, 'registo_cliente.html', {'form': form})
 # POST /api/register/fornecedor/
-@api_view(['POST','GET'])
+@api_view(['POST', 'GET'])
 @permission_classes([AllowAny])
 def register_fornecedor(request):
     if request.method == 'POST':
@@ -68,27 +68,29 @@ def register_fornecedor(request):
             phone = form.cleaned_data['phone']
             supplier_name = form.cleaned_data['supplier_name']
 
-            # Criar utilizador com is_supplier=True
+            # Criar utilizador normal (sem is_staff)
             user = User.objects.create_user(username=username, email=email, password=password)
-            user.is_staff = True
+            
+            # Adicionar ao grupo "Fornecedores"
+            from django.contrib.auth.models import Group
+            grupo, _ = Group.objects.get_or_create(name="Fornecedores")
+            user.groups.add(grupo)
             user.save()
 
             # Criar perfil do fornecedor
             SupplierProfile.objects.create(
                 email=user,
                 phone=phone,
-                supplier_name=supplier_name,
-                
-
-                
+                supplier_name=supplier_name
             )
 
-            return redirect('/')  # ou outro destino
+            return redirect('/')  # Ou redireciona para /login ou /dashboard
         else:
             return render(request, 'registo_fornecedor.html', {'form': form})
     else:
         form = FornecedorRegisterForm()
     return render(request, 'registo_fornecedor.html', {'form': form})
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])  # Podes mudar para IsAdminUser em produção
