@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 from django.core.exceptions import PermissionDenied
 
+
+
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -275,3 +277,6 @@ def atribuir_a_fornecedores(user):
     grupo, criado = Group.objects.get_or_create(name='Fornecedores')
     user.groups.add(grupo)
     user.save()
+
+# views.py
+
