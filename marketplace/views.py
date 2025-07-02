@@ -8,6 +8,7 @@ from rest_framework import status, generics, permissions
 from django.db.models import Sum
 from django.contrib.auth.models import Group
 from decimal import Decimal
+from oscar.apps.partner.models import Partner
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
@@ -74,6 +75,8 @@ def register_fornecedor(request):
             # Adicionar ao grupo "Fornecedores"
             from django.contrib.auth.models import Group
             grupo, _ = Group.objects.get_or_create(name="Fornecedores")
+            from oscar.apps.partner.models import Partner
+            
             user.groups.add(grupo)
             user.save()
 
@@ -83,6 +86,10 @@ def register_fornecedor(request):
                 phone=phone,
                 supplier_name=supplier_name
             )
+            
+            partner = Partner.objects.create(name=supplier_name)
+            partner.users.add(user)
+            partner.save()
 
             return redirect('/')  # Ou redireciona para /login ou /dashboard
         else:
